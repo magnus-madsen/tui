@@ -41,11 +41,13 @@ The program below is the whole stack in motion: it opens a terminal, switches to
  * On a dumb/piped terminal (no TTY) `size()` is 0x0 and `readKey()` hits EOF
  * immediately, so the demo paints one frame and exits rather than hanging.
  */
-use Tui.Terminal.{Terminal, runWithIO}
+use Tui.Terminal.Terminal
 use Tui.Key.{Key, Direction}
 
-def main(): Unit \ IO =
-    run { demo() } with runWithIO
+/// `main` carries the `Terminal` effect in its own signature; Flix installs the
+/// effect's default handler (`Terminal.runWithIO`, annotated `@DefaultHandler`)
+/// automatically, so there is no explicit `run ... with` block.
+def main(): Unit \ Terminal = demo()
 
 /// The square's size in cells. Wider than tall so it looks roughly square,
 /// since terminal cells are about twice as tall as they are wide.
@@ -137,7 +139,7 @@ def clampCol(cols: Int32, col: Int32): Int32 =
 
 ## What it shows
 
-- **`runWithIO`** opens one JLine terminal, runs the body against it, and **always restores it on the way out** — on normal return, on a Flix `Throwable`, and on an external `SIGTERM`/`SIGINT` or stray `System.exit` (via a JVM shutdown hook). A crash never leaves your terminal in raw mode or on the alternate screen.
+- **`runWithIO`** is the `Terminal` effect's `@DefaultHandler`, so a `main` (or `@Test`) that carries `Terminal` in its signature gets it installed automatically — no explicit `run ... with` block needed. It opens one JLine terminal, runs the body against it, and **always restores it on the way out** — on normal return, on a Flix `Throwable`, and on an external `SIGTERM`/`SIGINT` or stray `System.exit` (via a JVM shutdown hook). A crash never leaves your terminal in raw mode or on the alternate screen.
 - **`enterRawMode` + `readKey`** give per-keystroke input; `readKey` decodes bytes into a `Key` — printable characters, the common control keys, and the four arrow keys via `Tui.Key`.
 - **`Terminal.write`** carries raw output. The cursor/screen control used here — `?1049h/l` (alternate screen), `?25l/h` (cursor), `2J` (clear), `<r>;<c>H` (move) — is plain ANSI escape codes; a public helper layer for these is future work.
 
