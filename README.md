@@ -137,18 +137,12 @@ def clampCol(cols: Int32, col: Int32): Int32 =
     Int32.max(1, Int32.min(hi, col))
 ```
 
-## What it shows
-
-- **`runWithIO`** is the `Terminal` effect's `@DefaultHandler`, so a `main` (or `@Test`) that carries `Terminal` in its signature gets it installed automatically — no explicit `run ... with` block needed. It opens one JLine terminal, runs the body against it, and **always restores it on the way out** — on normal return, on a Flix `Throwable`, and on an external `SIGTERM`/`SIGINT` or stray `System.exit` (via a JVM shutdown hook). A crash never leaves your terminal in raw mode or on the alternate screen.
-- **`enterRawMode` + `readKey`** give per-keystroke input; `readKey` decodes bytes into a `Key` — printable characters, the common control keys, and the four arrow keys via `Tui.Key`.
-- **`Terminal.write`** carries raw output. The cursor/screen control used here — `?1049h/l` (alternate screen), `?25l/h` (cursor), `2J` (clear), `<r>;<c>H` (move) — is plain ANSI escape codes; a public helper layer for these is future work.
-
 ## Running
 
-Run it in a **real terminal** — raw mode needs a TTY:
+To properly run the example you have to build a fatjar and run that. First save the example above as `src/Main.flix` (the package ships as a library with no `main` of its own); then build and run in a **real terminal** — raw mode needs a TTY:
 
 ```sh
-flix run            # or: java -jar flix.jar run
+$ flix build
+$ flix build-fatjar
+$ java -jar artifact/tui.jar
 ```
-
-With piped or redirected input there is no TTY, so JLine falls back to a dumb terminal and the program paints one frame and exits instead of hanging.
