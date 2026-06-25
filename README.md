@@ -28,18 +28,6 @@ The program below is the whole stack in motion: it opens a terminal, switches to
 use Tui.Terminal.Terminal
 use Tui.Key.{Key, Direction}
 
-/// The square's size in cells. Wider than tall so it looks roughly square,
-/// since terminal cells are about twice as tall as they are wide.
-def squareH(): Int32 = 3
-def squareW(): Int32 = 6
-
-/// The current terminal size, falling back to 80x24 when JLine cannot detect
-/// it (a dumb terminal reports 0x0), so the demo still behaves off-TTY.
-def currentSize(): {rows = Int32, cols = Int32} \ Terminal =
-    let sz = Terminal.size();
-    { rows = if (sz#rows <= 0) 24 else sz#rows,
-      cols = if (sz#cols <= 0) 80 else sz#cols }
-
 ///
 /// `main` carries the `Terminal` effect directly; Flix installs the effect's
 /// default handler (`Terminal.runWithIO`, annotated `@DefaultHandler`)
@@ -58,6 +46,18 @@ def main(): Unit \ Terminal =
     Terminal.write("\u001B[?25h\u001B[?1049l");     // show cursor, leave alt screen
     Terminal.exitRawMode();
     Terminal.flush()
+
+/// The square's size in cells. Wider than tall so it looks roughly square,
+/// since terminal cells are about twice as tall as they are wide.
+def squareH(): Int32 = 3
+def squareW(): Int32 = 6
+
+/// The current terminal size, falling back to 80x24 when JLine cannot detect
+/// it (a dumb terminal reports 0x0), so the demo still behaves off-TTY.
+def currentSize(): {rows = Int32, cols = Int32} \ Terminal =
+    let sz = Terminal.size();
+    { rows = if (sz#rows <= 0) 24 else sz#rows,
+      cols = if (sz#cols <= 0) 80 else sz#cols }
 
 ///
 /// Draws the current frame, reads one key, and either quits or recurses with
