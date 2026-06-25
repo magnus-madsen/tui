@@ -2,6 +2,23 @@
 
 **flix-tui** is a small, standalone terminal-UI library for [Flix](https://flix.dev): a [JLine](https://github.com/jline/jline3)-backed `Terminal` effect plus a pure-Flix decoding layer on top. The `Terminal` effect is the only place that touches Java/JLine — raw-mode I/O, the alternate screen, and the cursor are all driven through it — while everything above it (key decoding today, a screen/widget layer later) stays pure Flix and unit-testable without a TTY.
 
+## The `Terminal` effect
+
+The whole Java boundary is this one effect — six operations, all in `Tui.Terminal`:
+
+```flix
+pub eff Terminal {
+    def size(): {rows = Int32, cols = Int32}    // current terminal size, in cells
+    def write(s: String): Unit                  // write `s` verbatim (raw, no flush)
+    def flush(): Unit                           // flush buffered output
+    def readKey(): Option[Key]                  // read+decode next key; None at EOF (blocks)
+    def enterRawMode(): Unit                    // non-canonical, no-echo; saves prior attrs
+    def exitRawMode(): Unit                     // restore the attrs saved by enterRawMode
+}
+```
+
+Keys come back as the pure `Tui.Key.Key` ADT — `Char`, `Enter`, `Esc`, `Tab`, `Backspace`, `Arrow(Direction)`, `Ctrl(Char)`, `Unknown` — decoded without any I/O, so the decoder is unit-testable without a TTY.
+
 ## A complete example
 
 The program below is the whole stack in motion: it opens a terminal, switches to raw mode, and draws a solid block you move around with the arrow keys (`q` or `Ctrl-C` to quit). The package ships as a library with no `main` of its own — drop this into a project's `src/` to run it.
