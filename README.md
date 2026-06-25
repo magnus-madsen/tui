@@ -24,30 +24,9 @@ Keys come back as the pure `Tui.Key.Key` ADT — `Char`, `Enter`, `Esc`, `Tab`, 
 The program below is the whole stack in motion: it opens a terminal, switches to raw mode, and draws a solid block you move around with the arrow keys (`q` or `Ctrl-C` to quit). The package ships as a library with no `main` of its own — drop this into a project's `src/` to run it.
 
 ```flix
-/*
- * Main.flix — a small interactive demo for the flix-tui `Terminal` effect.
- *
- * Run it in a REAL terminal with `flix run`: it clears the screen, draws a
- * solid square in the middle, and lets you move the square with the arrow
- * keys. Press `q` or Ctrl-C to quit. It exercises the whole M1 stack end to
- * end — raw mode, blocking key reads, the `Tui.Key` arrow decoder — together
- * with the cursor/screen escape codes that will become the M2 helper layer.
- *
- * The escape codes are written straight through `Terminal.write` (no new
- * effect ops): `?1049h/l` enter/leave the alternate screen, `?25l/h` hide and
- * show the cursor, `2J` clears, `<r>;<c>H` moves the cursor, and the square
- * is painted from `█` (U+2588 FULL BLOCK) characters.
- *
- * On a dumb/piped terminal (no TTY) `size()` is 0x0 and `readKey()` hits EOF
- * immediately, so the demo paints one frame and exits rather than hanging.
- */
+// Main.flix — a small interactive demo for the flix-tui `Terminal` effect.
 use Tui.Terminal.Terminal
 use Tui.Key.{Key, Direction}
-
-/// `main` carries the `Terminal` effect in its own signature; Flix installs the
-/// effect's default handler (`Terminal.runWithIO`, annotated `@DefaultHandler`)
-/// automatically, so there is no explicit `run ... with` block.
-def main(): Unit \ Terminal = demo()
 
 /// The square's size in cells. Wider than tall so it looks roughly square,
 /// since terminal cells are about twice as tall as they are wide.
@@ -62,10 +41,13 @@ def currentSize(): {rows = Int32, cols = Int32} \ Terminal =
       cols = if (sz#cols <= 0) 80 else sz#cols }
 
 ///
-/// Sets up the alternate screen, centers the square, runs the event loop, then
-/// restores the terminal.
+/// `main` carries the `Terminal` effect directly; Flix installs the effect's
+/// default handler (`Terminal.runWithIO`, annotated `@DefaultHandler`)
+/// automatically, so there is no explicit `run ... with` block. It sets up the
+/// alternate screen, centers the square, runs the event loop, then restores
+/// the terminal.
 ///
-def demo(): Unit \ Terminal =
+def main(): Unit \ Terminal =
     Terminal.enterRawMode();
     Terminal.write("\u001B[?1049h\u001B[?25l");     // enter alt screen, hide cursor
     Terminal.flush();
